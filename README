@@ -5,8 +5,14 @@ both Windows and Unix.  If successful, the goal is to turn this back over
 to Unidata as a possible replacement for their current Autoconf based 
 system. The test platforms will be:
 
-* Windows 7, 64-bit, Visual C++ 2010 Express Edition
-* Unubtu 10.04 LTS, 32-bit, GNU C++ 4.4.3
+* Windows 7, 64-bit, Visual C++ 2010 Express Edition, IDE and NMAKe
+* Unubtu 10.04 LTS, 32-bit, GNU C++ 4.4.3, make and Eclipse
+
+We strongly recommend that inexperienced CMake people
+use the "cmake-gui" utility to configure the project properly.
+After using the "configure" option for the first time, netCDF
+build settings can be modified by changing the variables in this
+gui.  The changed values will remain until the CMake cache is cleared.
 
 The Unidata network Common Data Form (netCDF) is an interface for
 scientific data access and a freely-distributed software library that
@@ -51,3 +57,12 @@ For more information about netCDF, see the netCDF Web page at
 For more information about CMake, see the netCDF Web page at
 
     http://www.cmake.org/
+
+
+== TO-DO LIST ==
+
+* Add rules to support FORTRAN API.
+* Add rules to support man-page generation.
+* Add rules to support m4 code generation on Unix platforms.
+* Test on a broader variety of platforms.
+

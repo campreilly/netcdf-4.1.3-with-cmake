@@ -132,6 +132,8 @@ include( CheckIncludeFile )
 include( CheckLibraryExists )
 include( CheckFunctionExists )
 include( CheckTypeSize )
+set( CMAKE_EXTRA_INCLUDE_FILES ${CMAKE_REQUIRED_INCLUDES}
+     stddef.h sys/types.h )
 
 CHECK_FUNCTION_EXISTS( alloca   HAVE_ALLOCA )
 CHECK_INCLUDE_FILE( alloca.h    HAVE_ALLOCA_H )
@@ -209,6 +211,8 @@ CHECK_TYPE_SIZE( uchar          UCHAR )
 CHECK_INCLUDE_FILE( unistd.h    HAVE_UNISTD_H )
 CHECK_TYPE_SIZE( "unsigned long long int" UNSIGNED_LONG_LONG_INT )
 CHECK_TYPE_SIZE( _Bool          _BOOL )
+CHECK_INCLUDE_FILE( ncconfig.h  HAVE_NCCONFIG_H )
+CHECK_INCLUDE_FILE( sys/param.h HAVE_SYS_PARAM_H )
 
 # for which compilers are these types now different?
 
@@ -238,44 +242,39 @@ endif ( NOT ENABLE_BUILD_V2 )
 CHECK_TYPE_SIZE( double DOUBLE )
 CHECK_TYPE_SIZE( float FLOAT )
 CHECK_TYPE_SIZE( int INT )
+CHECK_TYPE_SIZE( long LONG )
 CHECK_TYPE_SIZE( short SHORT )
 
 CHECK_TYPE_SIZE( off_t OFF_T )
-if ( NOT HAS_OFF_T  )
-    message( STATUS "#define off_t long int" )
+if ( NOT HAVE_OFF_T  )
+    if( NOT DEFINED NETCDF_DEFINED_OFF_T )
+        message( STATUS "#define off_t long int" )
+        set( NETCDF_DEFINED_OFF_T YES CACHE INTERNAL "Config overrides off_t" )
+        # mark_as_advanced( NETCDF_DEFINED_OFF_T )
+    endif( NOT DEFINED NETCDF_DEFINED_OFF_T )
     SET( off_t "long int" )
-    CHECK_TYPE_SIZE( "${DEF_OFF_T}" OFF_T )
-endif ( NOT HAS_OFF_T )
+    SET( OFF_T ${LONG} )
+endif ( NOT HAVE_OFF_T )
 
 CHECK_TYPE_SIZE( size_t SIZE_T )
-if ( NOT HAS_SIZE_T )
-    message( STATUS "#define size_t unsigned int" )
+if ( NOT HAVE_SIZE_T )
+    if( NOT DEFINED NETCDF_DEFINED_SIZE_T )
+        message( STATUS "#define size_t unsigned int" )
+        set( NETCDF_DEFINED_SIZE_T YES CACHE INTERNAL "Config overrides off_t" )
+        # mark_as_advanced( NETCDF_DEFINED_SIZE_T )
+    endif( NOT DEFINED NETCDF_DEFINED_SIZE_T )
     SET( size_t "unsigned int" )
-    CHECK_TYPE_SIZE( "${DEF_SIZE_T}" SIZE_T )
-endif ( NOT HAS_SIZE_T )
+    SET( SIZE_T ${INT} )
+endif ( NOT HAVE_SIZE_T )
 
 #############################################
 # CREATE THE LIBRARIES
 
-# macro: searches a module list for headers and sources
-
-macro( FIND_SOURCES MODULES )
-    set( HEADERS "" ) 
-    set( SOURCES "" ) 
-    foreach( MOD ${MODULES} )
-        file( GLOB HDR_LIST ${MOD}/*.h )
-        set( HEADERS ${HEADERS} ${HDR_LIST} )
-        file( GLOB SRC_LIST ${MOD}/*.c* )
-        set( SOURCES ${SOURCES} ${SRC_LIST} )
-        source_group( ${MOD} FILES ${HDR_LIST} ${SRC_LIST} )
-    endforeach( MOD )
-endmacro(FIND_SOURCES)
-
-# compiler options
-
-if( MSVC )                		# Visual Studio (2010) options
-    set( BUILD_SHARED_LIBS ON )
-    add_definitions( -DDLL_EXPORT )
+if( MSVC )                          # Visual Studio (2010) options
+    set( BUILD_SHARED_LIBS OFF )
+    # add_definitions( -DDLL_EXPORT )
+    # add_definitions( -DDLL_NETCDF )
+    add_definitions( -D_CRT_SECURE_NO_WARNINGS -wd4244 -wd4996 -wd4018 ) # quiet some harmless warning
 
 else( CMAKE_COMPILER_IS_GNUCXX )	# GNU C++ options
     set( BUILD_SHARED_LIBS ON )
@@ -285,14 +284,16 @@ endif()
 configure_file( 
     ${PROJECT_SOURCE_DIR}/config.h.cmake
     ${PROJECT_BINARY_DIR}/config.h )
-
 include_directories( ${PROJECT_BINARY_DIR} )
 include_directories( include )
-file( GLOB HDR_LIST include/*.h )
-set( INCLUDE ${PROJECT_BINARY_DIR}/config.h ${HDR_LIST} )
-source_group( include FILES ${INCLUDE} )
 
-# c interface library
-
-FIND_SOURCES( "libsrc;libsrc4" )
-add_library( netcdf ${INCLUDE} ${HEADERS} ${SOURCES} )
+add_subdirectory( libsrc )
+if( ENABLE_NETCDF_4 )
+    add_subdirectory( libsrc4 )
+endif()
+if( ENABLE_BUILD_CXX )
+    add_subdirectory( cxx )
+endif()
+# if( ENABLE_BUILD_CXX AND ENABLE_CXX_4 AND ENABLE_NETCDF_4 )
+#    add_subdirectory( cxx4 )
+# endif()
