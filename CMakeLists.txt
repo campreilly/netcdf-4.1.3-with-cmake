@@ -22,10 +22,10 @@ project( netcdf C CXX )
 set( PACKAGE_VERSION_MAJOR 4 )
 set( PACKAGE_VERSION_MINOR 1 )
 set( PACKAGE_VERSION_PATCH 3 )
-set( PACKAGE_VERSION ${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH} )
+set( PACKAGE_VERSION \"${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}\" )
 set( VERSION PACKAGE_VERSION )
 
-set( PACKAGE NetCDF)
+set( PACKAGE NetCDF )
 set( PACKAGE_NAME "Unidata Network Common Data Form" )
 set( PACKAGE_STRING "${PACKAGE_NAME} (${PACKAGE}) ${PACKAGE_VERSION}" )
 set( PACKAGE_URL "http://www.unidata.ucar.edu/software/netcdf" )
@@ -38,7 +38,7 @@ set( NCIO_MINBLOCKSIZE 256 CACHE STRING "specify minimum I/O blocksize for netCD
 set( WITH_UDUNITS OFF CACHE BOOL "build udunits2 package")
 set( ENABLE_FSYNC ON CACHE BOOL "include experimental fsync code.")
 set( ENABLE_VALGRIND_TESTS OFF CACHE BOOL "build with valgrind-tests (valgrind is required, static builds only)")
-set( ENABLE_NETCDF_4 ON CACHE BOOL "build with netcdf-4 (HDF5 and zlib required)")
+set( ENABLE_NETCDF_4 OFF CACHE BOOL "build with netcdf-4 (HDF5 and zlib required)") # turn off for debug
 set( WITH_LIBCF OFF CACHE BOOL "build and install libcf library (Requires netCDF-4 and HDF5)")
 set( ENABLE_HDF4 OFF CACHE BOOL "build netcdf-4 with HDF4 read capability (HDF4, HDF5 and zlib required)")
 set( ENABLE_HDF4_FILE_TESTS OFF CACHE BOOL "use wget to fetch some sample HDF4 data, and then test against it")
@@ -280,6 +280,7 @@ else( CMAKE_COMPILER_IS_GNUCXX )	# GNU C++ options
     set( BUILD_SHARED_LIBS ON )
 
 endif()
+add_definitions( -DHAVE_CONFIG_H )
 
 configure_file( 
     ${PROJECT_SOURCE_DIR}/config.h.cmake
@@ -288,6 +289,7 @@ include_directories( ${PROJECT_BINARY_DIR} )
 include_directories( include )
 
 add_subdirectory( libsrc )
+add_subdirectory( nctest )
 if( ENABLE_NETCDF_4 )
     add_subdirectory( libsrc4 )
 endif()
